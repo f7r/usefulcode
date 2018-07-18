@@ -65,41 +65,35 @@ def printe(string, fcolor, bcolor="", bold=False,
            underscore=False, blink=False, reverse=False):
     # Print enhanced.
     import sys
+    fcolor_code_map = {
+                        "black": 30,
+                        "red": 31,
+                        "green": 32,
+                        "yellow": 33,
+                        "blue": 34,
+                        "magenta": 35,
+                        "cyan":36,
+                        "white": 37
+                      }
+    bcolor_code_map = {
+                        "black": 40,
+                        "red": 41,
+                        "green": 42,
+                        "yellow": 43,
+                        "blue": 44,
+                        "magenta": 45,
+                        "cyan":46,
+                        "white": 47
+                      }
     code_list = []
     # Foreground colors.
-    if fcolor == "black":
-        code_list.append(30)
-    elif fcolor == "red":
-        code_list.append(31)
-    elif f_color == "green":
-        code_list.append(32)
-    elif fcolor == "yellow":
-        code_list.append(33)
-    elif fcolor == "blue":
-        code_list.append(34)
-    elif fcolor == "magenta":
-        code_list.append(35)
-    elif fcolor == "cyan":
-        code_list.append(36)
-    elif fcolor == "white":
-        code_list.append(37)
+    if fcolor in fcolor_code_map:
+        fcolor_code = fcolor_code_map[fcolor]
+        code_list.append(fcolor_code)
     # Background colors
-    if bcolor == "black":
-        code_list.append(40)
-    elif bcolor == "red":
-        code_list.append(41)
-    elif bcolor == "green":
-        code_list.append(42)
-    elif bcolor == "yellow":
-        code_list.append(43)
-    elif bcolor == "blue":
-        code_list.append(44)
-    elif bcolor == "magenta":
-        code_list.append(45)
-    elif bcolor == "cyan":
-        code_list.append(46)
-    elif bcolor == "white":
-        code_list.append(47)
+    if bcolor in bcolor_code_map:
+        bcolor_code = bcolor_code_map[bcolor]
+        code_list.append(bcolor_code)
     # Text attributes
     if bold:
         code_list.append(1)
@@ -112,8 +106,8 @@ def printe(string, fcolor, bcolor="", bold=False,
     code = "0"
     for i in code_list:
         code = code + ";" + str(i)
-    color_string = "\033[{0}m{1}\033[0m".format(code, string)
-    sys.stdout.write(color_string)
+    enhanced_string = "\033[{0}m{1}\033[0m".format(code, string)
+    sys.stdout.write(enhanced_string)
     # line break
     print()
 
@@ -142,3 +136,41 @@ def printpb(percent):
     sys.stdout.flush()
     if percent == 100:
         print()
+
+# 得到程序文件运行时的目录
+
+def get_path():
+    # Only work in a file.
+    import os
+    return os.path.dirname(os.path.realpath(__file__))
+
+# 文件日志示例
+
+import logging
+import os
+from logging.handlers import RotatingFileHandler
+
+class LogHandler(logging.Logger):
+
+    _fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    _datefmt = "%a, %d %b %Y %H:%M:%S"
+    _logpath = "/var/log/pylog"
+
+    def __init__(self, name=None):
+        logging.Logger.__init__(self, name)
+        self._prepare()
+        self.log_file = "{0}/py.log".format(self._logpath)
+        formatter = logging.Formatter(self._fmt, self._datefmt)
+        rfhandler = RotatingFileHandler(self.log_file, maxBytes=1024*1024, backupCount=5)
+        rfhandler.setFormatter(formatter)
+        #shandler = logging.StreamHandler()
+        #shandler.setFormatter(formatter)
+        self.addHandler(rfhandler)
+        #self.addHandler(shandler)
+        #self.setLevel(logging.INFO)
+
+    def _prepare(self):
+        if os.path.exists(self._logpath):
+            return
+        else:
+           os.mkdir(self._logpath)
