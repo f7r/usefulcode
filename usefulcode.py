@@ -144,6 +144,12 @@ def get_path():
     import os
     return os.path.dirname(os.path.realpath(__file__))
 
+def get_path():
+    from pathlib import Path
+    p = Path(__file__)
+    s = p.resolve().parent
+    return str(s)
+
 # 文件日志示例
 
 import logging
@@ -173,4 +179,14 @@ class LogHandler(logging.Logger):
         if os.path.exists(self._logpath):
             return
         else:
-           os.mkdir(self._logpath)
+            os.mkdir(self._logpath)
+# 动态定义变量(慎用)
+
+
+def dynamic_define_vars():
+    local_vars = globals()
+    VARS = {"a": 1, "b": 2, "c": 3}
+    for i in VARS:
+        name = "int_" + i
+        value = VARS[i]
+        local_vars[name] = value
