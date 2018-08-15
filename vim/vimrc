@@ -2,7 +2,8 @@
 " <F5> Run scripts.
 " <F6> Run Debug.
 " <F7> Run SyntasticCheck.
-" <F8> Switch indentLine.
+" <leader><F7> Run SyntasticCheck pylint.
+" <F8> Switch EnhancedDisplay state.
 " <F9> Switch paste mode.
 " <leader>j Jump to declaration/definition.
 " <leader>n Next syntax error.
@@ -24,13 +25,16 @@ Plugin 'Yggdroot/indentLine'
 call vundle#end()
 filetype plugin on
 
-
+" Common setting.
 syntax on
+set t_Co=8
 set encoding=utf-8
 set fileformat=unix
 set pastetoggle=<F9>
 set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
 set laststatus=2
+set showtabline=1
+set noshowmode
 
 " Enable folding
 set foldmethod=indent
@@ -44,9 +48,13 @@ autocmd FileType python set
 \ expandtab
 \ autoindent
 
+autocmd FileType * call EnhancedDisplay()
+
+" highlight setting.
+
 highlight BadWhitespace ctermbg=red
-autocmd FileType python,yaml,dosini match BadWhitespace /^\t\+/
-autocmd FileType python,yaml,dosini match BadWhitespace /\s\+$/
+autocmd FileType * match BadWhitespace /^\t\+/
+autocmd FileType * match BadWhitespace /\s\+$/
 
 " Plugin setting.
 let python_highlight_all=1
@@ -69,11 +77,13 @@ let g:syntastic_style_error_symbol = "\u2717"
 let g:syntastic_warning_symbol = "\uFF01"
 let g:syntastic_style_warning_symbol = "\uFE57"
 let g:syntastic_python_checkers = ['flake8']
+let g:syntastic_python_pylint_args = "--rcfile=~/.pylintrc"
 let g:syntastic_mode_map = {
     \ "mode": "active",
     \ "active_filetypes": ["python", "yaml"],
     \ "passive_filetypes": [] }
 
+" Function and key map setting.
 function! SyntasticCheckHook(errors)
   if !empty(a:errors)
     let g:syntastic_loc_list_height = min([len(a:errors), 5])
@@ -94,13 +104,13 @@ function! <SID>LocationNext()
     lfirst
   endtry
 endfunction
-nmap <silent> <leader>p :<C-u>exe 'call <SID>LocationPrevious()'<CR>
-nmap <silent> <leader>n :<C-u>exe 'call <SID>LocationNext()'<CR>
+nmap <silent> <leader>p :call <SID>LocationPrevious()<CR>
+nmap <silent> <leader>n :call <SID>LocationNext()<CR>
 
 nnoremap <leader>j :YcmCompleter GoTo<CR>
 nnoremap <F7> :SyntasticCheck<CR>
 nnoremap <leader><F7> :SyntasticCheck pylint<CR>
-nnoremap <silent> <F8> :IndentLinesToggle<CR>
+map <silent> <F8> :call EnhancedDisplay()<CR>
 
 map <F5> :call Run()<CR>
 function! Run()
@@ -118,3 +128,38 @@ function! Debug()
     endif
 endfunction
 
+autocmd BufNewFile *.py call SetTitle()
+autocmd BufWrite *.py call SetLastModifiedTimes()
+function SetTitle()
+    call setline(1, "# =============================================================================")
+    call setline(2, "# Author: falseuser")
+    call setline(3, "# File Name: ".expand("%"))
+    call setline(4, "# Created Time: ".strftime("%Y-%m-%d %H:%M:%S"))
+    call setline(5, "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S"))
+    call setline(6, "# Description:")
+    call setline(7, "# =============================================================================")
+    exec ":8"
+endfunction
+
+function SetLastModifiedTimes()
+    let oldline = getline(5)
+    let matched_str = matchstr(oldline, "# Last modified: ")
+    if matched_str == "# Last modified: "
+        let newline = "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S")
+        call setline(5, newline)
+    endif
+endfunction
+
+function EnhancedDisplay()
+    if exists("g:display_enhanced") && g:display_enhanced
+        let g:display_enhanced = 0
+        set nonumber
+        set nocursorline
+        exec ":IndentLinesDisable"
+    else
+        let g:display_enhanced = 1
+        set number
+        set cursorline
+        exec ":IndentLinesEnable"
+    endif
+endfunction

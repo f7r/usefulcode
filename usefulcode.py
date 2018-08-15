@@ -3,6 +3,7 @@
 # 列表去重（保持原有顺序）
 
 def list_dedupe(lst_in):
+    from functools import reduce
     func = lambda x,y:x if y in x else x + [y]
     lst_out = reduce(func, [[], ] + lst_in)
     return lst_out
