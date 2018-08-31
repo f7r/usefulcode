@@ -8,6 +8,8 @@
 " <leader>j Jump to declaration/definition.
 " <leader>n Next syntax error.
 " <leader>p Previous syntax error.
+" ]n Next git hunk.
+" ]p Previous git hunk.
 
 set nocompatible
 filetype off
@@ -16,9 +18,11 @@ set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
-Plugin 'tmhedberg/SimpylFold'
 Plugin 'vim-syntastic/syntastic'
-Plugin 'powerline/powerline'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+Plugin 'tpope/vim-fugitive'
+Plugin 'airblade/vim-gitgutter'
 Plugin 'Valloric/YouCompleteMe'
 Plugin 'Yggdroot/indentLine'
 
@@ -35,6 +39,7 @@ set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
 set laststatus=2
 set showtabline=1
 set noshowmode
+set updatetime=100
 
 " Enable folding
 set foldmethod=indent
@@ -49,6 +54,8 @@ autocmd FileType python set
 \ autoindent
 
 autocmd FileType * call EnhancedDisplay()
+autocmd BufNewFile *.py call SetTitle()
+autocmd BufWrite *.py call SetLastModifiedTimes()
 
 " highlight setting.
 
@@ -57,8 +64,7 @@ autocmd FileType * match BadWhitespace /^\t\+/
 autocmd FileType * match BadWhitespace /\s\+$/
 
 " Plugin setting.
-let python_highlight_all=1
-let g:SimpylFold_docstring_preview = 1
+let python_highlight_all = 1
 let g:ycm_autoclose_preview_window_after_completion = 1
 let g:ycm_seed_identifiers_with_syntax = 1
 let g:ycm_enable_diagnostic_signs = 0
@@ -67,9 +73,30 @@ let g:ycm_filetype_whitelist = { 'python': 1 }
 let g:indentLine_char = '┊'
 let g:indentLine_color_term = "green"
 
+if !exists('g:airline_symbols')
+    let g:airline_symbols = {}
+endif
+let g:airline_powerline_fonts = 1
+let g:airline_left_sep = '⮀'
+let g:airline_left_alt_sep = '⮁'
+let g:airline_right_sep = '⮂'
+let g:airline_right_alt_sep = '⮃'
+let g:airline_symbols.crypt = "X"
+let g:airline_symbols.branch = '⭠'
+let g:airline_symbols.readonly = '⭤'
+let g:airline_symbols.linenr = '⭡'
+let g:airline_symbols.whitespace = 'Ξ'
+let g:airline_symbols.maxlinenr = ''
+let g:airline_symbols.notexists = '⊕'
+let g:airline_theme='powerlineish'
+let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
+let g:gitgutter_map_keys = 0
+let g:gitgutter_terminal_reports_focus = 0
+
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 0
+let g:syntastic_check_on_w = 0
 let g:syntastic_check_on_wq = 0
 let g:syntastic_auto_jump = 2
 let g:syntastic_error_symbol = "\u2718"
@@ -87,6 +114,14 @@ let g:syntastic_mode_map = {
 function! SyntasticCheckHook(errors)
   if !empty(a:errors)
     let g:syntastic_loc_list_height = min([len(a:errors), 5])
+    nnoremap <silent> <leader>p :call <SID>LocationPrevious()<CR>
+    nnoremap <silent> <leader>n :call <SID>LocationNext()<CR>
+  else
+    try
+      unmap <leader>p
+      unmap <leader>n
+    catch /^Vim\%((\a\+)\)\=:E31/
+    endtry
   endif
 endfunction
 
@@ -104,62 +139,65 @@ function! <SID>LocationNext()
     lfirst
   endtry
 endfunction
-nmap <silent> <leader>p :call <SID>LocationPrevious()<CR>
-nmap <silent> <leader>n :call <SID>LocationNext()<CR>
 
-nnoremap <leader>j :YcmCompleter GoTo<CR>
+nnoremap <silent> <leader>j :YcmCompleter GoTo<CR>
 nnoremap <F7> :SyntasticCheck<CR>
 nnoremap <leader><F7> :SyntasticCheck pylint<CR>
-map <silent> <F8> :call EnhancedDisplay()<CR>
+nnoremap <silent> <F8> :call EnhancedDisplay()<CR>
+nnoremap ]n :GitGutterNextHunk<CR>
+nnoremap ]p :GitGutterPrevHunk<CR>
 
-map <F5> :call Run()<CR>
+nnoremap <F5> :call Run()<CR>
 function! Run()
-    exec "w"
-    if &filetype == 'python'
-        exec "!python -B %"
-    endif
+  exec "w"
+  if &filetype == 'python'
+    exec "!python -B %"
+  endif
 endfunction
 
-map <F6> :call Debug()<CR>
+nnoremap <F6> :call Debug()<CR>
 function! Debug()
-    exec "w"
-    if &filetype == 'python'
-        exec "!python -B -m pdb %"
-    endif
+  exec "w"
+  if &filetype == 'python'
+    exec "!python -B -m pdb %"
+  endif
 endfunction
 
-autocmd BufNewFile *.py call SetTitle()
-autocmd BufWrite *.py call SetLastModifiedTimes()
 function SetTitle()
-    call setline(1, "# =============================================================================")
-    call setline(2, "# Author: falseuser")
-    call setline(3, "# File Name: ".expand("%"))
-    call setline(4, "# Created Time: ".strftime("%Y-%m-%d %H:%M:%S"))
-    call setline(5, "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S"))
-    call setline(6, "# Description:")
-    call setline(7, "# =============================================================================")
-    exec ":8"
+  call setline(1, "# =============================================================================")
+  call setline(2, "# Author: falseuser")
+  call setline(3, "# File Name: ".expand("%"))
+  call setline(4, "# Created Time: ".strftime("%Y-%m-%d %H:%M:%S"))
+  call setline(5, "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S"))
+  call setline(6, "# Description:")
+  call setline(7, "# =============================================================================")
+  exec ":8"
 endfunction
 
 function SetLastModifiedTimes()
-    let oldline = getline(5)
+  for linenum in [5, 6, 7]
+    let oldline = getline(linenum)
     let matched_str = matchstr(oldline, "# Last modified: ")
     if matched_str == "# Last modified: "
-        let newline = "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S")
-        call setline(5, newline)
+      let newline = "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S")
+      call setline(linenum, newline)
+      break
     endif
+  endfor
 endfunction
 
 function EnhancedDisplay()
-    if exists("g:display_enhanced") && g:display_enhanced
-        let g:display_enhanced = 0
-        set nonumber
-        set nocursorline
-        exec ":IndentLinesDisable"
-    else
-        let g:display_enhanced = 1
-        set number
-        set cursorline
-        exec ":IndentLinesEnable"
-    endif
+  if exists("g:display_enhanced") && g:display_enhanced
+    let g:display_enhanced = 0
+    set nonumber
+    set nocursorline
+    exec ":IndentLinesDisable"
+    exec ":GitGutterSignsDisable"
+  else
+    let g:display_enhanced = 1
+    set number
+    set cursorline
+    exec ":IndentLinesEnable"
+    exec ":GitGutterSignsEnable"
+  endif
 endfunction
