@@ -35,7 +35,6 @@ set t_Co=8
 set encoding=utf-8
 set fileformat=unix
 set pastetoggle=<F9>
-set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
 set laststatus=2
 set showtabline=1
 set noshowmode
@@ -114,6 +113,8 @@ let g:syntastic_mode_map = {
 function! SyntasticCheckHook(errors)
   if !empty(a:errors)
     let g:syntastic_loc_list_height = min([len(a:errors), 5])
+    " cursorline will slow down the running speed.
+    set nocursorline
     nnoremap <silent> <leader>p :call <SID>LocationPrevious()<CR>
     nnoremap <silent> <leader>n :call <SID>LocationNext()<CR>
   else
@@ -122,6 +123,9 @@ function! SyntasticCheckHook(errors)
       unmap <leader>n
     catch /^Vim\%((\a\+)\)\=:E31/
     endtry
+  endif
+  if exists("g:display_enhanced") && g:display_enhanced
+    exec ":GitGutterSignsEnable"
   endif
 endfunction
 

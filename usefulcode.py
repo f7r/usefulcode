@@ -181,9 +181,9 @@ class LogHandler(logging.Logger):
             return
         else:
             os.mkdir(self._logpath)
+
+
 # 动态定义变量(慎用)
-
-
 def dynamic_define_vars():
     local_vars = globals()
     VARS = {"a": 1, "b": 2, "c": 3}
@@ -194,8 +194,6 @@ def dynamic_define_vars():
 
 
 # 设置执行超时
-
-
 import signal
 import time
 
@@ -236,6 +234,21 @@ if __name__ == '__main__':
 
 def run_cmd(cmd):
     import subprocess
-    p = subprocess.Popen(bash_cmd, shell=True, stdout=subprocess.PIPE)
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     output = p.stdout.read()
     return output
+
+
+# 配置文件
+from configparser import SafeConfigParser
+
+class ConfigClass(SafeConfigParser):
+
+    DEFAULT = {}
+
+    def __init__(self, filename):
+        super().__init__(self.DEFAULT)
+        self.read(filename)
+
+
+config = ConfigClass("config.ini")
