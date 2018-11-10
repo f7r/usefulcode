@@ -64,6 +64,8 @@ autocmd FileType * match BadWhitespace /\s\+$/
 
 " Plugin setting.
 let python_highlight_all = 1
+let g:ycm_complete_in_strings = 0
+let g:ycm_complete_in_comments = 0
 let g:ycm_autoclose_preview_window_after_completion = 1
 let g:ycm_seed_identifiers_with_syntax = 1
 let g:ycm_enable_diagnostic_signs = 0
@@ -170,16 +172,20 @@ endfunction
 function SetTitle()
   call setline(1, "# =============================================================================")
   call setline(2, "# Author: falseuser")
-  call setline(3, "# File Name: ".expand("%"))
-  call setline(4, "# Created Time: ".strftime("%Y-%m-%d %H:%M:%S"))
-  call setline(5, "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S"))
-  call setline(6, "# Description:")
-  call setline(7, "# =============================================================================")
-  exec ":8"
+  call setline(3, "# Created Time: ".strftime("%Y-%m-%d %H:%M:%S"))
+  call setline(4, "# Last modified: ".strftime("%Y-%m-%d %H:%M:%S"))
+  call setline(5, "# Description: ".expand("%"))
+  call setline(6, "# =============================================================================")
+  call setline(7, "")
+  call setline(8, "")
+  call setline(9, "")
+  call setline(10, "if __name__ == \"__main__\":")
+  call setline(11, "    pass")
+  exec ":7"
 endfunction
 
 function SetLastModifiedTimes()
-  for linenum in [5, 6, 7]
+  for linenum in [4, 5, 6, 7]
     let oldline = getline(linenum)
     let matched_str = matchstr(oldline, "# Last modified: ")
     if matched_str == "# Last modified: "
