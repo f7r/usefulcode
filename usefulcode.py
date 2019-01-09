@@ -62,7 +62,7 @@ def is_uuid(str_uuid):
 
 # 添加字符串输出效果
 
-def printe(string, fcolor, bcolor="", bold=False, 
+def printe(string, fcolor, bcolor="", bold=False,
            underscore=False, blink=False, reverse=False):
     # Print enhanced.
     import sys
@@ -150,47 +150,6 @@ def get_path():
     p = Path(__file__)
     s = p.resolve().parent
     return str(s)
-
-# 文件日志示例
-
-import logging
-import os
-from logging.handlers import RotatingFileHandler
-
-class LogHandler(logging.Logger):
-
-    _fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    _datefmt = "%a, %d %b %Y %H:%M:%S"
-    _logpath = "/var/log/pylog"
-
-    def __init__(self, name=None):
-        logging.Logger.__init__(self, name)
-        self._prepare()
-        self.log_file = "{0}/py.log".format(self._logpath)
-        formatter = logging.Formatter(self._fmt, self._datefmt)
-        rfhandler = RotatingFileHandler(self.log_file, maxBytes=1024*1024, backupCount=5)
-        rfhandler.setFormatter(formatter)
-        #shandler = logging.StreamHandler()
-        #shandler.setFormatter(formatter)
-        self.addHandler(rfhandler)
-        #self.addHandler(shandler)
-        #self.setLevel(logging.INFO)
-
-    def _prepare(self):
-        if os.path.exists(self._logpath):
-            return
-        else:
-            os.mkdir(self._logpath)
-
-
-# 动态定义变量(慎用)
-def dynamic_define_vars():
-    local_vars = globals()
-    VARS = {"a": 1, "b": 2, "c": 3}
-    for i in VARS:
-        name = "int_" + i
-        value = VARS[i]
-        local_vars[name] = value
 
 
 # 设置执行超时
