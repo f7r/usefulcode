@@ -1,11 +1,13 @@
 # =============================================================================
 # Author: falseuser
 # Created Time: 2019-01-07 10:12:10
-# Last modified: 2019-01-09 14:49:51
+# Last modified: 2019-03-15 15:00:10
 # Description: log.py
 # =============================================================================
 import os
+import time
 import logging
+import functools
 from configparser import SafeConfigParser
 from logging.handlers import RotatingFileHandler
 
@@ -36,7 +38,7 @@ class SimpleLogger(logging.Logger):
                 backupCount=backup_count,
             )
             file_handler.setFormatter(formatter)
-            file_handler.setLevel(level)
+            file_handler.setLevel(level.upper())
             handlers.append(file_handler)
         if use_console:
             log_format = self.config.get("console", "log_format", raw=True)
@@ -45,7 +47,7 @@ class SimpleLogger(logging.Logger):
             formatter = logging.Formatter(log_format, time_format)
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(formatter)
-            console_handler.setLevel(level)
+            console_handler.setLevel(level.upper())
             handlers.append(console_handler)
 
         return handlers
@@ -74,6 +76,73 @@ class LoggerConfig(SafeConfigParser):
     def __init__(self, filename, *args, **kwargs):
         SafeConfigParser.__init__(self, *args, **kwargs)
         self.read(filename)
+
+
+class ComplexLogger(logging.Logger):
+
+    LOG_FILENAME = "/var/log/ucwi-mgr/complex.log"
+    LOG_FORMAT = (
+        "%(asctime)s - %(filename)s[%(lineno)d] - %(levelname)s - %(message)s"
+    )
+    LOG_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+    def __init__(self):
+        logging.Logger.__init__(self, "complex")
+        self._prepare_dir()
+        self._add_handler()
+
+    def _add_handler(self):
+        formatter = logging.Formatter(
+            self.LOG_FORMAT,
+            self.LOG_TIME_FORMAT,
+        )
+        file_handler = RotatingFileHandler(
+            LOG_FILENAME,
+            maxBytes=200 * 1024 * 1024,
+            backupCount=5,
+        )
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.DEBUG)
+        self.addHandler(file_handler)
+
+    def _prepare_dir(self):
+        use_file = True
+        if use_file:
+            log_dir = os.path.dirname(LOG_FILENAME)
+            if os.path.exists(log_dir):
+                return
+            else:
+                os.mkdir(log_dir)
+
+
+class ComplexLoggerDecorator(object):
+
+    def __init__(self):
+        self.logger = ComplexLogger()
+        self.on = True
+
+    def __call__(self, func):
+        if self.on:
+            return self.start_log(func)
+        else:
+            return func
+
+    def start_log(self, func):
+        @functools.wraps(func)
+        def logged(*args, **kwargs):
+            t0 = time.time()
+            result = func(*args, **kwargs)
+            used_time = time.time() - t0
+            func_name = func.__name__
+            msg = (
+                "\n\t" "Funcation name: {0}"
+                "\n\t" "Runed time: {1:.4f}"
+                "\n\t" "args: {2}, kwargs: {3}"
+                "\n\t" "returned result: {4}"
+            ).format(func_name, used_time, args, kwargs, result)
+            self.logger.debug(msg)
+            return result
+        return logged
 
 
 if __name__ == "__main__":
