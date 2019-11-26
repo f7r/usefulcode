@@ -5,6 +5,7 @@
 " <leader><F7> Run SyntasticCheck pylint.
 " <F8> Switch EnhancedDisplay state.
 " <F9> Switch paste mode.
+" <F10> Switch Python syntax
 " <leader>j Jump to declaration/definition.
 " <leader>n Next syntax error.
 " <leader>p Previous syntax error.
@@ -25,6 +26,9 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'airblade/vim-gitgutter'
 Plugin 'Valloric/YouCompleteMe'
 Plugin 'Yggdroot/indentLine'
+Plugin 'scrooloose/nerdcommenter'
+Plugin 'vim-python/python-syntax'
+"Plugin 'kh3phr3n/python-syntax'
 
 call vundle#end()
 filetype plugin on
@@ -32,6 +36,7 @@ filetype plugin on
 " Common setting.
 syntax on
 set t_Co=8
+"set t_Co=256
 set encoding=utf-8
 set fileformat=unix
 set pastetoggle=<F9>
@@ -53,17 +58,19 @@ autocmd FileType python set
 \ autoindent
 
 autocmd FileType * call EnhancedDisplay()
+autocmd FileType * call AddSyntax()
 autocmd BufNewFile *.py call SetTitle()
 autocmd BufWrite *.py call SetLastModifiedTimes()
 
 " highlight setting.
 
 highlight BadWhitespace ctermbg=red
+highlight ColorColumn cterm=bold ctermbg=NONE ctermfg=darkred
 autocmd FileType * match BadWhitespace /^\t\+/
 autocmd FileType * match BadWhitespace /\s\+$/
 
 " Plugin setting.
-let python_highlight_all = 1
+let g:python_highlight_all = 1
 let g:ycm_complete_in_strings = 0
 let g:ycm_complete_in_comments = 0
 let g:ycm_autoclose_preview_window_after_completion = 1
@@ -152,6 +159,7 @@ nnoremap <leader><F7> :SyntasticCheck pylint<CR>
 nnoremap <silent> <F8> :call EnhancedDisplay()<CR>
 nnoremap ]n :GitGutterNextHunk<CR>
 nnoremap ]p :GitGutterPrevHunk<CR>
+nnoremap ]u :GitGutterUndoHunk<CR>
 
 nnoremap <F5> :call Run()<CR>
 function! Run()
@@ -199,15 +207,33 @@ endfunction
 function EnhancedDisplay()
   if exists("g:display_enhanced") && g:display_enhanced
     let g:display_enhanced = 0
+    if &filetype == 'python'
+        let g:python_enhanced = 0
+        set colorcolumn=0
+    endif
     set nonumber
     set nocursorline
     exec ":IndentLinesDisable"
     exec ":GitGutterSignsDisable"
   else
     let g:display_enhanced = 1
+    if &filetype == 'python'
+        let g:python_enhanced = 1
+        set colorcolumn=80
+
+    endif
     set number
     set cursorline
     exec ":IndentLinesEnable"
     exec ":GitGutterSignsEnable"
+  endif
+endfunction
+
+function AddSyntax()
+  if b:current_syntax == 'python'
+    syn match pythonPunctuation     ',' display
+    syn match pythonParentheses     '[\(\)\{\}\[\]]'  display
+    hi def link pythonPunctuation   Special
+    hi def link pythonParentheses   Special
   endif
 endfunction
