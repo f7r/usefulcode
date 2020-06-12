@@ -1,7 +1,7 @@
 # =============================================================================
 # Author: falseuser
 # Created Time: 2019-06-20 14:55:27
-# Last modified: 2019-06-21 10:55:46
+# Last modified: 2020-06-06 11:53:10
 # Description: 3.py
 # =============================================================================
 
@@ -18,7 +18,6 @@ class Solution:
                 l = d[s[i]] + 1
                 r += 1
             d[s[i]] = i
-            # print(s[l:r])
             if r - l > max_len:
                 max_len = r - l
         return max_len
